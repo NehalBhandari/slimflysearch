@@ -32,6 +32,7 @@
 
 #include <strop/strop.h>
 #include <stdlib.h>  // For system
+#include <stdio.h>
 
 #include "search/util.h"
 #include <string>
@@ -238,6 +239,10 @@ void Engine::stage3() {
         break;
       }
     }
+
+    remove("sf_bb.txt");
+    remove("sf_bb.txt.part.2");
+    remove("sf_bb.out");
 
     int edgecuts_i = std::stoi(edgecuts_s, nullptr, 10);
     slimfly_.bisections =
