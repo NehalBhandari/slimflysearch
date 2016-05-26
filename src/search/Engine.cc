@@ -120,13 +120,15 @@ void Engine::stage1() {
   /*
    * generate possible dimension widths (S)
    */
-  slimfly_.width = 5; 
+  slimfly_.width = 5;
   while (true) {
     // determine the number of routers
     u64 coeff = ceil(slimfly_.width / 4.0);
     int delta = slimfly_.width - 4*coeff;
     slimfly_.routers = 2 * slimfly_.width * slimfly_.width;
-    u64 baseRadix = 1 + (3 * slimfly_.width - delta) / 2;  // minimum current radix
+
+    // minimum current radix
+    u64 baseRadix = 1 + (3 * slimfly_.width - delta) / 2;
 
 //    for (u64 d = 0; d < slimfly_.widths.size(); d++) {
 //      slimfly_.routers *= slimfly_.widths.at(d);
