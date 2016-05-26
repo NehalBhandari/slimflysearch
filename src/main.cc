@@ -211,7 +211,7 @@ s32 main(s32 _argc, char** _argv) {
     // format the regular values in the row
     grid.set(row, 0, std::to_string(row));
     grid.set(row, 1, std::to_string(res.dimensions));
-    grid.set(row, 2, strop::vecString<u64>(res.widths).c_str());
+    grid.set(row, 2, std::to_string(res.width));
     grid.set(row, 3, std::to_string(res.concentration));
     grid.set(row, 4, std::to_string(res.terminals));
     grid.set(row, 5, std::to_string(res.routers));
