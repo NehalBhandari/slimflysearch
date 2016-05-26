@@ -45,8 +45,6 @@
 #include "search/Engine.h"
 
 s32 main(s32 _argc, char** _argv) {
-  // u64 minDimensions;
-  // u64 maxDimensions;
   u64 minRadix;
   u64 maxRadix;
   u64 minConcentration;
@@ -54,8 +52,6 @@ s32 main(s32 _argc, char** _argv) {
   u64 minTerminals;
   u64 maxTerminals;
   f64 minBandwidth;
-  // bool fixedWidth;
-  // bool fixedWeight;
   u64 maxResults;
   bool printSettings;
   std::string costCalc;
@@ -68,12 +64,6 @@ s32 main(s32 _argc, char** _argv) {
     TCLAP::CmdLine cmd(description, ' ', version);
 
     // define command line args
-    // TCLAP::ValueArg<u64> minDimensionsArg(
-    //     "", "mindimensions", "minimum number of dimensions",
-    //     false, 1, "u64", cmd);
-    // TCLAP::ValueArg<u64> maxDimensionsArg(
-    //     "", "maxdimensions", "maximum number of dimensions",
-    //     false, 4, "u64", cmd);
     TCLAP::ValueArg<u64> minRadixArg(
         "", "minradix", "minimum router radix",
         false, 2, "u64", cmd);
@@ -94,13 +84,7 @@ s32 main(s32 _argc, char** _argv) {
         false, 0, "u64", cmd);
     TCLAP::ValueArg<f64> minBandwidthArg(
         "", "minbandwidth", "minimum relative bisection bandwidth",
-        false, 1.0, "f64", cmd);
-    // TCLAP::SwitchArg fixedWidthArg(
-    //     "", "fixedwidth", "only search fixed width (fbfly) topologies",
-    //     cmd, false);
-    // TCLAP::SwitchArg fixedWeightArg(
-    //     "", "fixedweight", "only search fixed weight (fbfly) topologies",
-    //     cmd, false);
+        false, 0.50, "f64", cmd);
     TCLAP::ValueArg<u64> maxResultsArg(
         "", "maxresults", "maximum number of results",
         false, 10, "u64", cmd);
@@ -115,8 +99,6 @@ s32 main(s32 _argc, char** _argv) {
     cmd.parse(_argc, _argv);
 
     // copy values out to variables
-    // minDimensions = minDimensionsArg.getValue();
-    // maxDimensions = maxDimensionsArg.getValue();
     minRadix = minRadixArg.getValue();
     maxRadix = maxRadixArg.getValue();
     minConcentration = minConcentrationArg.getValue();
@@ -127,8 +109,6 @@ s32 main(s32 _argc, char** _argv) {
       maxTerminals = minTerminals * 2;
     }
     minBandwidth = minBandwidthArg.getValue();
-    // fixedWidth = fixedWidthArg.getValue();
-    // fixedWeight = fixedWeightArg.getValue();
     maxResults = maxResultsArg.getValue();
     printSettings = printSettingsArg.getValue();
     costCalc = costCalcArg.getValue();
@@ -139,8 +119,6 @@ s32 main(s32 _argc, char** _argv) {
   // if in verbose mode, print input settings
   if (printSettings) {
     printf("input settings:\n"
-           // "  minDimensions = %lu\n"
-           // "  maxDimensions = %lu\n"
            "  minRadix = %lu\n"
            "  maxRadix = %lu\n"
            "  minConcentration = %lu\n"
@@ -148,13 +126,9 @@ s32 main(s32 _argc, char** _argv) {
            "  minTerminals = %lu\n"
            "  maxTerminals = %lu\n"
            "  minBandwidth = %f\n"
-           // "  fixedWidth = %s\n"
-           // "  fixedWeight = %s\n"
            "  maxResults = %lu\n"
            "  costCalc = %s\n"
            "\n",
-           // minDimensions,
-           // maxDimensions,
            minRadix,
            maxRadix,
            minConcentration,
@@ -162,8 +136,6 @@ s32 main(s32 _argc, char** _argv) {
            minTerminals,
            maxTerminals,
            minBandwidth,
-           // (fixedWidth ? "yes" : "no"),
-           // (fixedWeight ? "yes" : "no"),
            maxResults,
            costCalc.c_str());
   }
@@ -187,13 +159,13 @@ s32 main(s32 _argc, char** _argv) {
   // format the regular header
   grid.set(0, 0, "#");
   grid.set(0, 1, "Dimensions");
-  grid.set(0, 2, "Widths");
+  grid.set(0, 2, "Width");
   grid.set(0, 3, "Concentration");
   grid.set(0, 4, "Terminals");
   grid.set(0, 5, "Routers");
   grid.set(0, 6, "Radix");
   grid.set(0, 7, "Channels");
-  grid.set(0, 8, "Bisections");
+  grid.set(0, 8, "Bisection");
   grid.set(0, 9, "Cost");
 
   // format the extension header
@@ -217,7 +189,7 @@ s32 main(s32 _argc, char** _argv) {
     grid.set(row, 5, std::to_string(res.routers));
     grid.set(row, 6, std::to_string(res.routerRadix));
     grid.set(row, 7, std::to_string(res.channels));
-    grid.set(row, 8, strop::vecString<f64>(res.bisections, ',', 2).c_str());
+    grid.set(row, 8, std::to_string(res.bisections));
     grid.set(row, 9, std::to_string(res.cost));
 
     // get extension values from the calculator

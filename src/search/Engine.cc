@@ -115,7 +115,7 @@ void Engine::stage1() {
    * Number of dimensions is fixed
    */
   // find the maximum width of any one dimension
-  u64 maxWidth = ceil(2 * (maxRadix_ - minConcentration_) / 3.0);
+  u64 maxWidth = round(2 * (maxRadix_ - minConcentration_) / 3.0);
   if (maxWidth < 5) {
     return;
   }
@@ -132,7 +132,7 @@ void Engine::stage1() {
   u32 prime_idx = 1;
   while (true) {
     // determine the number of routers
-    u64 coeff = ceil(slimfly_.width / 4.0);
+    u64 coeff = round(slimfly_.width / 4.0);
     int delta = slimfly_.width - 4*coeff;
     slimfly_.routers = 2 * slimfly_.width * slimfly_.width;
 
@@ -165,7 +165,7 @@ void Engine::stage2() {
 
   // compute the baseRadix (no terminals)
   u64 baseRadix = 0;
-  u64 coeff = ceil(slimfly_.width / 4.0);
+  u64 coeff = round(slimfly_.width / 4.0);
   int delta = slimfly_.width - 4*coeff;
   slimfly_.routers = 2 * slimfly_.width * slimfly_.width;
   baseRadix = (3 * slimfly_.width - delta) / 2;
@@ -202,7 +202,7 @@ void Engine::stage3() {
 
   // find the base radix
   slimfly_.routerRadix = slimfly_.concentration;
-  u64 coeff = ceil(slimfly_.width / 4.0);
+  u64 coeff = round(slimfly_.width / 4.0);
   int delta = slimfly_.width - 4*coeff;
   slimfly_.routers = 2 * slimfly_.width * slimfly_.width;
   slimfly_.routerRadix += (3 * slimfly_.width - delta) / 2;
@@ -211,56 +211,54 @@ void Engine::stage3() {
   bool tooBigRadix = (slimfly_.routerRadix > maxRadix_);
 
   // if not already skipped, compute bisection bandwidth
-  // TODO(ashish): Compute bisection bandwidth
   bool tooSmallBandwidth = false;
   int sysOutput = 0;
+
   if (!tooSmallRadix && !tooBigRadix) {
-    slimfly_.bisections.clear();
-    slimfly_.bisections.resize(slimfly_.dimensions, 0.0);
     f64 smallestBandwidth = 9999999999;
-    for (u64 dim = 0; dim < slimfly_.dimensions; dim++) {
-      writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
+    
+    writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
 
-      sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
-      if (sysOutput) {
-        printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
-        return;
+    sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
+    if (sysOutput) {
+      printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
+      return;
+    }
+
+    // Parse METIS output to obtain edgecuts
+    std::ifstream metisfile("sf_bb.out");
+    std::string nextline;
+    std::string edgecuts_s;
+    while (std::getline(metisfile, nextline)) {
+      if (nextline.find("Edgecut:") != std::string::npos) {
+        std::istringstream ss(nextline);
+        // Need the third word
+        for (int i = 0; i < 3; ++i)
+          ss >> edgecuts_s;
+        break;
       }
+    }
 
-      // Parse METIS output to obtain edgecuts
-      std::ifstream metisfile("sf_bb.out");
-      std::string nextline;
-      std::string edgecuts_s;
-      while (std::getline(metisfile, nextline)) {
-        if (nextline.find("Edgecut:") != std::string::npos) {
-          std::istringstream ss(nextline);
-          // Need the third word
-          for (int i = 0; i < 3; ++i)
-            ss >> edgecuts_s;
-          break;
-        }
-      }
+    int edgecuts_i = std::stoi(edgecuts_s, nullptr, 10);
+    slimfly_.bisections =
+      static_cast <f64> (edgecuts_i) / slimfly_.terminals;
 
-      int edgecuts_i = std::stoi(edgecuts_s, nullptr, 10);
-
-      printf("Edgecuts is: %d", edgecuts_i);
-
-      slimfly_.bisections.at(dim) =
-        edgecuts_i / slimfly_.terminals;
-
-      if (slimfly_.bisections.at(dim) < smallestBandwidth) {
-        smallestBandwidth = slimfly_.bisections.at(dim);
-      }
+    if (slimfly_.bisections < smallestBandwidth) {
+      smallestBandwidth = slimfly_.bisections;
     }
     if (smallestBandwidth < minBandwidth_) {
       tooSmallBandwidth = true;
       if (HSE_DEBUG >= 7) {
-        printf("3s: SKIPPING S=%lu T=%lu N=%lu P=%lu R=%lu B=%s\n",
+        printf("3s: SKIPPING S=%lu T=%lu N=%lu P=%lu R=%lu B=%lf\n",
                              slimfly_.width,
                slimfly_.concentration, slimfly_.terminals,
                slimfly_.routers,
                slimfly_.routerRadix,
-               strop::vecString<f64>(slimfly_.bisections).c_str());
+               slimfly_.bisections);
+
+        /* Used to debug gpmetis output file parser. */
+        printf("In stage 3, edgecuts is: %d\n", edgecuts_i);
+        printf("In stage 3, terminals is: %lu\n", slimfly_.terminals);
       }
     }
     // if passed all tests, send to next stage
@@ -274,23 +272,23 @@ void Engine::stage3() {
 
 void Engine::stage4() {
   if (HSE_DEBUG >= 3) {
-    printf("4: S=%lu T=%lu N=%lu B=%s\n", slimfly_.width,
+    printf("4: S=%lu T=%lu N=%lu B=%lf\n", slimfly_.width,
            slimfly_.concentration, slimfly_.terminals,
-           strop::vecString<f64>(slimfly_.bisections).c_str());
+           slimfly_.bisections);
   }
 
   // compute the number of channels (only router to router)
   slimfly_.channels = slimfly_.routers *
-                      (slimfly_.routerRadix - slimfly_.concentration);
+                      (slimfly_.routerRadix - slimfly_.concentration) / 2;
   stage5();
 }
 
 void Engine::stage5() {
   if (HSE_DEBUG >= 2) {
-    printf("5: S=%lu T=%lu N=%lu P=%lu R=%lu B=%s\n", slimfly_.width,
+    printf("5: S=%lu T=%lu N=%lu P=%lu R=%lu B=%lf\n", slimfly_.width,
            slimfly_.concentration, slimfly_.terminals, slimfly_.routers,
            slimfly_.routerRadix,
-           strop::vecString<f64>(slimfly_.bisections).c_str());
+           slimfly_.bisections);
   }
 
   slimfly_.cost = costFunction_->cost(slimfly_);

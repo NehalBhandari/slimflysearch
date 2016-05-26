@@ -43,9 +43,8 @@ struct Slimfly {
   u64 routers;  // P
   u64 concentration;  // T
   u64 terminals;  // N
-  // std::vector<u64> weights;  // K
   u64 routerRadix;  // R
-  std::vector<f64> bisections;  // B
+  f64 bisections;  // B
   u64 channels;
   f64 cost;
 };
@@ -74,8 +73,6 @@ class Engine {
   const std::deque<Slimfly>& results() const;
 
  private:
-  // u64 minDimensions_;
-  // u64 maxDimensions_;
   u64 minRadix_;
   u64 maxRadix_;
   u64 minConcentration_;
@@ -83,8 +80,6 @@ class Engine {
   u64 minTerminals_;
   u64 maxTerminals_;
   f64 minBandwidth_;
-  // bool fixedWidth_;
-  // bool fixedWeight_;
   u64 maxResults_;
   const CostFunction* costFunction_;
   Comparator comparator_;
