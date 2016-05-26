@@ -113,7 +113,6 @@ void Engine::stage1() {
    */
   // find the maximum width of any one dimension
   u64 maxWidth = ceil(2 * (maxRadix_ - minConcentration_) / 3.0);
-
   if (maxWidth < 5) {
     return;
   }
@@ -147,12 +146,12 @@ void Engine::stage1() {
     } else if (HSE_DEBUG >= 7) {
       printf("1s: SKIPPING S=%lu\n", slimfly_.width);
     }
-    // detect when done
-    if (slimfly_.width == maxWidth) {
-      break;
-    }
     // find the next widths configuration
     slimfly_.width = kPrimes[prime_idx++];
+    // detect when done
+    if (slimfly_.width > maxWidth) {
+      break;
+    }
   }
 }
 
