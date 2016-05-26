@@ -17,8 +17,8 @@ STATIC_LIBS   := \
 	../libgrid/bld/libgrid.a
 
 #--------------------- Cpp Lint -----------------------------------------------#
-LINT          := ../makeccpp/cpplint/cpplint.py
-LINT_FLAGS    :=
+#LINT          := ../makeccpp/cpplint/cpplint.py
+#LINT_FLAGS    :=
 
 #--------------------- Unit Tests ---------------------------------------------#
 TEST_SUFFIX   := _TEST

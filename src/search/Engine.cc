@@ -33,6 +33,7 @@
 #include <strop/strop.h>
 #include <stdlib.h>  // For system
 
+#include "search/util.h"
 #include <string>
 #include <sstream>  // For stringstream
 #include <fstream>
@@ -40,6 +41,7 @@
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include <set>
 
 static const u8 HSE_DEBUG = 0;
 static const u32 numPrimes = 52;
@@ -93,13 +95,14 @@ Engine::~Engine() {}
 void Engine::run() {
   slimfly_ = Slimfly();
 
-  /* Set dimensions to 2. 
-   * No particular use so far 
+  /* Set dimensions to 2.
+   * No particular use so far
    */
   slimfly_.dimensions = 2;
 
   results_.clear();
 
+  writeSlimflyAdjList(u32(5), u32(1), "sf_bb.txt");
   stage1();
 }
 
@@ -216,7 +219,8 @@ void Engine::stage3() {
     slimfly_.bisections.resize(slimfly_.dimensions, 0.0);
     f64 smallestBandwidth = 9999999999;
     for (u64 dim = 0; dim < slimfly_.dimensions; dim++) {
-      // TODO(ashish): Generate input to metis
+      writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
+
       sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
       if (sysOutput) {
         printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
@@ -297,4 +301,69 @@ void Engine::stage5() {
   if (results_.size() > maxResults_) {
     results_.pop_back();
   }
+}
+
+void Engine::writeSlimflyAdjList(u32 width, u32 delta, std::string filename) {
+
+  std::vector<u32> X, X_i;
+  createGeneratorSet(width, delta, X, X_i);
+
+  u32 numNodes = 2 * width * width;
+  u32 numEdges = 0;
+  std::vector< std::vector<u32> > adjList(numNodes, std::vector<u32>());
+
+  static const u32 NUM_GRAPHS = 2;
+  // link routers via channels: Intra subgraph connections
+  for (u32 graph = 0; graph < NUM_GRAPHS; graph++) {
+    std::vector<u32>& dVtr = (graph == 0) ? X : X_i;
+    std::set<u32> distSet(dVtr.begin(), dVtr.end());
+    for (u32 col = 0; col < width; col++) {
+      for (u32 srcRow = 0; srcRow < width; srcRow++) {
+        for (u32 dstRow = 0; dstRow < width; dstRow++) {
+          // determine the source and destination router
+          std::vector<u32> srcAddr = {graph, col, srcRow};
+          std::vector<u32> dstAddr = {graph, col, dstRow};
+          u32 dist = static_cast<u32>(
+            std::abs<int>(static_cast<int>(dstRow) - srcRow));
+          if (distSet.count(dist)) {
+            adjList.at(ifaceIdFromAddress(srcAddr, width)).push_back(
+              ifaceIdFromAddress(dstAddr, width) + 1);
+            numEdges++;
+          }
+        }
+      }
+    }
+  }
+  // link routers via channels: Inter subgraph connections
+  for (u32 x = 0; x < width; x++) {
+    for (u32 y = 0; y < width; y++) {
+      for (u32 m = 0; m < width; m++) {
+        for (u32 c = 0; c < width; c++) {
+          if (y == ((m*x + c) % width)) {
+             // determine the source router
+            std::vector<u32> addr1 = {0, x, y};
+            std::vector<u32> addr2 = {1, m, c};
+
+            adjList.at(ifaceIdFromAddress(addr1, width)).push_back(
+              ifaceIdFromAddress(addr2, width) + 1);
+            numEdges++;
+            adjList.at(ifaceIdFromAddress(addr2, width)).push_back(
+              ifaceIdFromAddress(addr1, width) + 1);
+            numEdges++;
+          }
+        }
+      }
+    }
+  }
+
+  std::ofstream adjLstFile;
+  adjLstFile.open(filename);
+  adjLstFile << numNodes << " " << (numEdges/2) << std::endl;
+  for (u32 i = 0; i < numNodes; i++) {
+    for (u32 j = 0; j < adjList[i].size(); j++) {
+      adjLstFile << adjList[i][j] << " ";
+    }
+    adjLstFile << std::endl;
+  }
+  adjLstFile.close();
 }

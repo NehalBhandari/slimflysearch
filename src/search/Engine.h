@@ -35,7 +35,7 @@
 
 #include <deque>
 #include <vector>
-
+#include <string>
 
 struct Slimfly {
   u64 dimensions;  // L
@@ -96,6 +96,8 @@ class Engine {
   void stage3();
   void stage4();
   void stage5();
+
+  void writeSlimflyAdjList(u32 width, u32 delta, std::string filename);
 };
 
 #endif  // SEARCH_ENGINE_H_
