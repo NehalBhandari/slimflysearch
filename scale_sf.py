@@ -38,7 +38,7 @@ def main(args):
   
   if args.maxradix > 51:
     maximumRadix = 51
-  else
+  else:
     maximumRadix = args.maxradix
   
   print('radix,terms,routers,channels,terms/router,channels/term')
