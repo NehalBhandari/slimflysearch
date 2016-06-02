@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
-###########################################################
+##############################################################
 # Program:		  scale_sf.py
 # Purpose:      Determine largest Slim Fly network possible
 #               given minimum bisection bandwidth and
 #               a radix range.
-# Author:		    Franky Romero, Ashish Chaudhari,
+# Authors:		  Franky Romero, Ashish Chaudhari,
 #               Wesson Altoyan, Nehal Bhandari       
 # Date:         Spring 2016
-# Notes:        Based on script written by Nic McDonald for
-#               the HyperX topology
-# Known Limits:	Currenty only goes up to radix 51 (not
-#               the script's limitation, but the Slim Fly
-#               implementation on SuperSim).
-###########################################################
+# Notes:        - Based on script written by Nic McDonald for
+#                 the HyperX topology
+#               - For radix higher than 51, metis will output
+#                 error messages related to the configuration
+#                 file. These can (and are) ignored by the
+#                 script in the search for the largest
+#                 possible configuration
+##############################################################
 
 import argparse
 import subprocess
@@ -36,13 +38,8 @@ def main(args):
   if args.verbose:
     print(args)
   
-  if args.maxradix > 51:
-    maximumRadix = 51
-  else:
-    maximumRadix = args.maxradix
-  
   print('radix,terms,routers,channels,terms/router,channels/term')
-  for radix in range(args.minradix, maximumRadix+1, 1):
+  for radix in range(args.minradix, args.maxradix+1, 1):
     if args.verbose:
       print('working on radix {0}'.format(radix))
 
@@ -89,7 +86,7 @@ if __name__ == '__main__':
   ap.add_argument('minradix', type=int,
                   help='minimum radix to search')
   ap.add_argument('maxradix', type=int,
-                  help='maximum radix to search (limited to 51)')
+                  help='maximum radix to search')
   ap.add_argument('minbandwidth', type=float,
                   help='minimum bisection bandwidth')
   ap.add_argument('-v', '--verbose', default=False, action='store_true',

@@ -45,11 +45,13 @@
 #include <set>
 
 static const u8 HSE_DEBUG = 0;
-static const u32 numPrimes = 52;
-static const u32 kPrimes[] = {5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
-41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,
-127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
-199, 211, 223, 227, 229, 233, 239, 241, 251};
+static const u32 numPrimes = 75;
+static const u32 kPrimes[] = {
+  5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
+  61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131,
+  137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
+  223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
+  307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389};
 
 CostFunction::CostFunction() {}
 CostFunction::~CostFunction() {}
@@ -151,6 +153,11 @@ void Engine::stage1() {
       printf("1s: SKIPPING S=%lu\n", slimfly_.width);
     }
     // find the next widths configuration
+    if (prime_idx == numPrimes) {
+      printf("Prime index has reached %d. Terminating program.\n",
+        numPrimes);
+      return;
+    }
     slimfly_.width = kPrimes[prime_idx++];
     // detect when done
     if (slimfly_.width > maxWidth) {
@@ -217,14 +224,13 @@ void Engine::stage3() {
 
   if (!tooSmallRadix && !tooBigRadix) {
     f64 smallestBandwidth = 9999999999;
-    
-    writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
 
+    writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
     sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
-    if (sysOutput) {
-      printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
+
+    /* If metis failed, return immediately. */
+    if (sysOutput)
       return;
-    }
 
     // Parse METIS output to obtain edgecuts
     std::ifstream metisfile("sf_bb.out");
