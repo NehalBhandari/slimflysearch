@@ -229,7 +229,6 @@ void Engine::stage3() {
     writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
     sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
     if (sysOutput) {
-      printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
       return;
     }
 

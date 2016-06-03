@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2016, Nic McDonald
+ * Copyright (c) 2016, Franky Romero, Ashish Chaudhari,
+ * Wesson Altoyan, Nehal Bhandari
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
