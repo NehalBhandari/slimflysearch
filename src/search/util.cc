@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Ashish Chaudhari, Franky Romero, Nehal Bhandari, Wasam Altoyan
+ * Copyright 2016 Ashish Chaudhari, Franky Romero, Nehal Bhandari, Wesson Altoyan
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,13 @@ static const u32 kPrimes[] = {5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
   199, 211, 223, 227, 229, 233, 239, 241, 251};
 static const std::set<u32> kPrimeSet(kPrimes, kPrimes + numPrimes);
 
+/* Function to determine if a given width is prime. */
 bool isPrime(u32 _width) {
   assert(_width < kPrimes[numPrimes - 1]);
   return (kPrimeSet.count(_width) != 0);
 }
 
+/* Function to determine if the width has a primitive element. */
 static bool isPrimitiveElement(u32 _width, u32 prim) {
   std::vector<bool> satisfy(_width, false);
   satisfy[0] = true;  // exception for primitive elem
@@ -46,6 +48,7 @@ static bool isPrimitiveElement(u32 _width, u32 prim) {
   return isprim;
 }
 
+/* Function to create the generator set for a computed primitive element. */
 u32 createGeneratorSet(
     u32 _width, int delta, std::vector<u32>& X, std::vector<u32>& X_i) {
   u32 prim = 1;
@@ -68,6 +71,7 @@ u32 createGeneratorSet(
   return X.size();
 }
 
+/* Function to determine the face ID from the address and the width. */
 u32 ifaceIdFromAddress(const std::vector<u32>& _address, u32 _width) {
   return (
       _address[2] +

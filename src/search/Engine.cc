@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2016, Nic McDonald
+ * Copyright (c) 2016, Franky Romero, Ashish Chaudhari,
+ * Wesson Altoyan, Nehal Bhandari
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -224,13 +225,13 @@ void Engine::stage3() {
 
   if (!tooSmallRadix && !tooBigRadix) {
     f64 smallestBandwidth = 9999999999;
-
+    
     writeSlimflyAdjList(slimfly_.width, delta, "sf_bb.txt");
     sysOutput = system("gpmetis sf_bb.txt 2 > sf_bb.out");
-
-    /* If metis failed, return immediately. */
-    if (sysOutput)
+    if (sysOutput) {
+      printf("Error: %d with gpmetis! Now exiting...\n", sysOutput);
       return;
+    }
 
     // Parse METIS output to obtain edgecuts
     std::ifstream metisfile("sf_bb.out");
